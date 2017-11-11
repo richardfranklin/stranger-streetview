@@ -8,7 +8,7 @@ import runSequence from 'run-sequence';
 import autoprefixer from 'autoprefixer';
 import browserSync from 'browser-sync';
 import gulpLoadPlugins from 'gulp-load-plugins';
-import pkg from './package.json';
+import pkg from './package.json'; 
 
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
