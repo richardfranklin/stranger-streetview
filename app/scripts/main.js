@@ -50,7 +50,9 @@ function loadThree(canvasImg) {
         /* =====================================
             Renderer
         ===================================== */
-        renderer = new THREE.WebGLRenderer();
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+
+        
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(width, height);
 
@@ -63,25 +65,35 @@ function loadThree(canvasImg) {
             Scene + fog
         ===================================== */
         scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x142d41, 0.002);
-        
+        scene.fog = new THREE.FogExp2(0x0a1721, 0.002, 0.002);
+        console.log(scene.fog.color)
 
         /* =====================================
             Light
         ===================================== */
-        var directionalLight = new THREE.DirectionalLight(0xa2c2ce, 1.7);
-        directionalLight.castShadow = true; 
-        scene.add(directionalLight);
-
-        var light = new THREE.DirectionalLight(0xa2c2ce, 1.7);
-        //light.position.set(0, 0, 0);
+        var light;
+        
+        light = new THREE.DirectionalLight(0xa2c2ce, 1.25);
+        light.position.set(-70, 40, 40);
         light.position.multiplyScalar(1.2);
     
         light.castShadow = true;
-        // THREE.CameraHelper( light.shadow.camera );
+        light.shadowCameraVisible = true;
     
         light.shadowMapWidth = 712;
         light.shadowMapHeight = 712;
+
+        var d = 200;
+        
+        light.shadowCameraLeft = -d;
+        light.shadowCameraRight = d;
+        light.shadowCameraTop = d;
+        light.shadowCameraBottom = -d;
+    
+        light.shadowCameraFar = 1000;
+        light.shadowDarkness = 0.1;
+    
+        scene.add(light);
         
         /* =====================================
             Camera
@@ -120,33 +132,42 @@ function loadThree(canvasImg) {
         scene.add(mesh);
 
         /* =====================================
-            Plane
+            Inner Sphere
         ===================================== */
-        var geometry = new THREE.PlaneGeometry(5000, 5000, 5000);
-        var material = new THREE.MeshPhongMaterial({
-            color: 0xffff00,
-            side: THREE.DoubleSide
+
+        var innertexture = new THREE.TextureLoader().load( "img/inner-sphere-texture.png" );
+        innertexture.wrapS = THREE.RepeatWrapping;
+        innertexture.wrapT = THREE.RepeatWrapping;
+        innertexture.repeat.set( 1, 1 );
+        innertexture.minFilter = THREE.LinearFilter;
+
+        var innermaterial = new THREE.MeshBasicMaterial({
+            map: innertexture,
+            //color: 0x000000,
+            opacity: 0.75,
+            transparent: true
         });
-        var plane = new THREE.Mesh(geometry, material);
-        plane.rotation.set(Math.PI / 2, 0, 0);
-        plane.position.y = -24;
-        plane.receiveShadow = true;
-        scene.add( plane );
+        var innergeometry = new THREE.SphereGeometry(10, 8, 8);
+        var innermesh = new THREE.Mesh(innergeometry, innermaterial);
+        innermesh.material.side = THREE.DoubleSide;
+        scene.add(innermesh);
+
 
         /* =====================================
             Shadow Plane
         ===================================== */
-        var planeGeometry = new THREE.PlaneGeometry( 5000, 5000 );
-        planeGeometry.rotateX(Math.PI / 2 );
-        
-        
-        var planeMaterial = new THREE.ShadowMaterial();
-        planeMaterial.opacity = 0.2;
-        
-        //var plane = new THREE.Mesh( planeGeometry, planeMaterial );
-        //plane.position.y = -24;
-        //plane.receiveShadow = true;
-        // scene.add( plane );
+        var geometry = new THREE.PlaneGeometry(5000, 5000, 5000);
+
+        var material = new THREE.ShadowMaterial({
+            transparent: true,
+            opacity : 0.2
+        });
+
+        var plane = new THREE.Mesh(geometry, material);
+        plane.rotateX( - Math.PI / 2 );
+        plane.position.y = -24;
+        plane.receiveShadow = true;
+        scene.add( plane );        
 
         /* =====================================
             Object loader
@@ -188,51 +209,17 @@ function loadThree(canvasImg) {
             }, onProgress, onError);
         });
 
-        /* ======== instantiate a loader ======== */
-
-        //var loader = new THREE.OBJLoader();
-
-        // load a resource
-        // loader.load(
-        //     // resource URL
-        //     'models/demogorgon/demogorgon.obj',
-        //     // called when resource is loaded
-        //     function (object) {
-        //         scene.add(object);
-        //         object.position.y = -25;
-        //         object.position.x = 50;
-        //         object.scale.set(0.15, 0.15, 0.15);
-        //         object.rotation.set(0, Math.PI * 1.8, 0);
-
-        //         object.traverse(function (child) {
-        //             if (child instanceof THREE.Mesh) {
-        //                 child.material.map = objtexture;
-        //             }
-        //         });
-        //     },
-
-        //     // called when loading is in progresses
-        //     function (xhr) {
-        //         console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-        //     },
-        //     // called when loading has errors
-        //     function (error) {
-        //         console.log('An error happened');
-        //     }
-        // );
-
 
         /* =====================================
             Particles
         ===================================== */
         var particleCount = 300;
-        var pMaterial = new THREE.PointCloudMaterial({
+        var pMaterial = new THREE.PointsMaterial({
             color: 0xFFFFFF,
             size: 3,
             blending: THREE.AdditiveBlending,
             depthTest: false,
-            transparent: true,
-            src: 'http://i.imgur.com/cTALZ.png'
+            transparent: true
         });
         var particles = new THREE.Geometry;
 
@@ -246,7 +233,7 @@ function loadThree(canvasImg) {
             particles.vertices.push(particle);
         }
 
-        var particleSystem = new THREE.PointCloud(particles, pMaterial);
+        var particleSystem = new THREE.Points(particles, pMaterial);
         particleSystem.position.y = 100;
         scene.add(particleSystem);
 
