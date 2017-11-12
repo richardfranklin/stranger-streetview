@@ -99,13 +99,23 @@ gulp.task('directory-styles', () => {
 });
 
 /* =============================================================
-    Assets
+    Image Assets
 ============================================================= */
 gulp.task('assets', () =>
 gulp.src([
     'app/img/*'
 ])
 .pipe(gulp.dest('dist/img'))
+);
+
+/* =============================================================
+    Model Assets
+============================================================= */
+gulp.task('models', () =>
+gulp.src([
+    'app/models/**'
+])
+.pipe(gulp.dest('dist/models'))
 );
 
 /* =============================================================
@@ -126,11 +136,7 @@ gulp.task('scripts', () =>
         'app/scripts/main.js',
         'app/scripts/main-new.js'
     ])
-        // Babel
-        .pipe(babel({
-            presets: ["env"]
-        }))
-        .pipe(gulp.dest('dist/scripts'))
+    .pipe(gulp.dest('dist/scripts'))
 );
 
 /* =============================================================
@@ -140,7 +146,9 @@ gulp.task('vendor-scripts', () =>
     gulp.src([
         'node_modules/three/build/three.min.js',
         'app/scripts/vendor/GSVPano.js',
-        'app/scripts/vendor/three.orbitcontrols.js'
+        'app/scripts/vendor/three.orbitcontrols.js',
+        'app/scripts/vendor/three.objloader.js',
+        'app/scripts/vendor/three.mtlloader.js'
     ])
     .pipe(gulp.dest('dist/scripts/vendor'))
 );
@@ -188,13 +196,14 @@ gulp.task('directory', () => {
 gulp.task('default', ['clean'], cb =>
     runSequence(
         'clean',
-        'templating',
         'directory',
         'directory-styles',
         'assets',
+        'models',
         'styles',
         'scripts',
         'vendor-scripts',
+        'templating',
         cb
     )
 );
