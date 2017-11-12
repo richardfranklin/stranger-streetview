@@ -33,13 +33,8 @@ var load_canvas = function () {
 ===================================== */
 
 function loadThree(canvasImg) {
-    var width = window.innerWidth,
-        height = window.innerHeight / 2;
-    var size = 256;
-    // var canvas = document.getElementById('canvas'),
-    //     ctx = canvas.getContext('2d');
 
-    var canvas, camera, scene, renderer, geometry, texture, mesh, controls;
+    var container, canvas, camera, scene, renderer, geometry, texture, mesh, controls;
     var simulateRain;
 
     init();
@@ -50,63 +45,77 @@ function loadThree(canvasImg) {
         /* =====================================
             Renderer
         ===================================== */
-        renderer = new THREE.WebGLRenderer({ antialias: true });
 
-        
+        function getWindowSize() {
+            return {
+                'width': window.innerWidth,
+                'height': window.innerHeight,
+                'aspect': (window.innerWidth / window.innerHeight)
+            };
+        }
+
+        renderer = new THREE.WebGLRenderer({
+            antialias: true
+        });
+
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(width, height);
 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        document.body.appendChild(renderer.domElement);
+        // Add to container in body
+        var winSize = getWindowSize();
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        // Set container size
+        renderer.setSize(winSize.width, winSize.height);
+        container.appendChild(renderer.domElement);
 
         /* =====================================
             Scene + fog
         ===================================== */
         scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x0a1721, 0.002, 0.002);
-        console.log(scene.fog.color)
 
         /* =====================================
             Light
         ===================================== */
         var light;
-        
+
         light = new THREE.DirectionalLight(0xa2c2ce, 1.25);
         light.position.set(-70, 40, 40);
-        light.position.multiplyScalar(1.2);
-    
+        // light.position.multiplyScalar(1.2);
+
         light.castShadow = true;
         light.shadowCameraVisible = true;
-    
+
         light.shadowMapWidth = 712;
         light.shadowMapHeight = 712;
 
         var d = 200;
-        
+
         light.shadowCameraLeft = -d;
         light.shadowCameraRight = d;
         light.shadowCameraTop = d;
         light.shadowCameraBottom = -d;
-    
+
         light.shadowCameraFar = 1000;
         light.shadowDarkness = 0.1;
-    
+
         scene.add(light);
-        
+
         /* =====================================
             Camera
         ===================================== */
         camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-        camera.position.z = 2;
+        camera.position.z = 0.5;
         scene.add(camera);
 
         /* =====================================
             Orbit controls
         ===================================== */
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        // controls.addEventListener('change'); // remove when using animation loop
         // enable animation loop when using damping or autorotation
         //controls.enableDamping = true;
         //controls.dampingFactor = 0.25;
@@ -120,7 +129,7 @@ function loadThree(canvasImg) {
         texture.needsUpdate = true;
 
         /* =====================================
-            Sphere
+            Street view Sphere
         ===================================== */
         var material = new THREE.MeshBasicMaterial({
             map: texture
@@ -132,13 +141,25 @@ function loadThree(canvasImg) {
         scene.add(mesh);
 
         /* =====================================
+            Sphere Test
+        ===================================== */
+        var material2 = new THREE.MeshBasicMaterial({
+            color: 0xffffff
+        });
+        var geometry2 = new THREE.SphereGeometry(30, 32, 32);
+        var mesh2 = new THREE.Mesh(geometry2, material2);
+        mesh2.material.side = THREE.DoubleSide;
+        mesh2.position.x = 60;
+        // scene.add(mesh2);
+
+        /* =====================================
             Inner Sphere
         ===================================== */
 
-        var innertexture = new THREE.TextureLoader().load( "img/inner-sphere-texture.png" );
+        var innertexture = new THREE.TextureLoader().load("img/inner-sphere-texture.png");
         innertexture.wrapS = THREE.RepeatWrapping;
         innertexture.wrapT = THREE.RepeatWrapping;
-        innertexture.repeat.set( 1, 1 );
+        innertexture.repeat.set(1, 1);
         innertexture.minFilter = THREE.LinearFilter;
 
         var innermaterial = new THREE.MeshBasicMaterial({
@@ -150,7 +171,7 @@ function loadThree(canvasImg) {
         var innergeometry = new THREE.SphereGeometry(10, 8, 8);
         var innermesh = new THREE.Mesh(innergeometry, innermaterial);
         innermesh.material.side = THREE.DoubleSide;
-        scene.add(innermesh);
+        // scene.add(innermesh);
 
 
         /* =====================================
@@ -160,34 +181,34 @@ function loadThree(canvasImg) {
 
         var material = new THREE.ShadowMaterial({
             transparent: true,
-            opacity : 0.2
+            opacity: 0.2
         });
 
         var plane = new THREE.Mesh(geometry, material);
-        plane.rotateX( - Math.PI / 2 );
+        plane.rotateX(-Math.PI / 2);
         plane.position.y = -24;
         plane.receiveShadow = true;
-        scene.add( plane );        
+        scene.add(plane);
 
         /* =====================================
             Object loader
         ===================================== */
 
-        var onProgress = function ( xhr ) {
-            if ( xhr.lengthComputable ) {
+        var onProgress = function (xhr) {
+            if (xhr.lengthComputable) {
                 var percentComplete = xhr.loaded / xhr.total * 100;
-                console.log( Math.round(percentComplete, 2) + '% downloaded' );
+                console.log(Math.round(percentComplete, 2) + '% downloaded');
             }
         };
 
-        var onError = function ( xhr ) { };
+        var onError = function (xhr) {};
 
         /* ======== Object Texture ======== */
 
         var mtlLoader = new THREE.MTLLoader();
 
         mtlLoader.setPath('/models/demogorgon/');
-        
+
         mtlLoader.load('demogorgon.mtl', function (materials) {
             materials.preload();
             var objLoader = new THREE.OBJLoader();
@@ -200,8 +221,8 @@ function loadThree(canvasImg) {
                 object.rotation.set(0, Math.PI * 1.8, 0);
                 scene.add(object);
 
-                object.traverse( function ( child ) {
-                    if ( child instanceof THREE.Mesh ) {
+                object.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
                         child.castShadow = true;
                     }
                 });
@@ -211,56 +232,75 @@ function loadThree(canvasImg) {
 
 
         /* =====================================
-            Particles
+            Particle 3D
         ===================================== */
+
+
+        /* =====================================
+            Particle 3D
+        ===================================== */
+
         var particleCount = 300;
-        var pMaterial = new THREE.PointsMaterial({
-            color: 0xFFFFFF,
-            size: 3,
-            blending: THREE.AdditiveBlending,
-            depthTest: false,
-            transparent: true
+        var pMaterial = new THREE.PointCloudMaterial({
+           color: 0xFFFFFF,
+           size: 6,
+           blending: THREE.AdditiveBlending,
+           depthTest: false,
+           transparent: true,
+           map: THREE.ImageUtils.loadTexture("/img/particle.png")
         });
+
         var particles = new THREE.Geometry;
 
+
         for (var i = 0; i < particleCount; i++) {
+            // Initial positions and valocities
             var pX = Math.random() * 1000 - 500,
-                pY = Math.random() * 500 - 250,
-                pZ = Math.random() * 1000 - 500,
-                particle = new THREE.Vector3(pX, pY, pZ);
+            pY = Math.random() * 500 - 250,
+            pZ = Math.random() * 1000 - 500,
+            particle = new THREE.Vector3(pX, pY, pZ);
             particle.velocity = {};
-            particle.velocity.y = -0.5;
+            particle.velocity.y = - (Math.random());
+            particle.velocity.x = (Math.random() * 2) - 1;
+            particle.velocity.z = (Math.random() * 2) - 1;
             particles.vertices.push(particle);
         }
 
-        var particleSystem = new THREE.Points(particles, pMaterial);
-        particleSystem.position.y = 100;
+        var particleSystem = new THREE.PointCloud(particles, pMaterial);
         scene.add(particleSystem);
+
+        simulateRain = function(){
+            var pCount = particleCount;
+            while (pCount--) {
+              var particle = particles.vertices[pCount];
+              if (particle.y < -200) {
+                // Reset particles and set new velocity
+                particle.y = 200;
+                particle.x = Math.random() * 1000 - 500;
+                particle.z = Math.random() * 1000 - 500;
+                particle.velocity.y = -(Math.random());
+                particle.velocity.x = (Math.random() * 2) - 1;
+                particle.velocity.z = (Math.random() * 2) - 1;
+              }
+          
+              particle.y += particle.velocity.y;
+              particle.x += particle.velocity.x;
+              particle.x += particle.velocity.z;
+            }
+          
+            particles.verticesNeedUpdate = true;
+          };
+
+
+        /* =====================================
+            Particles
+        ===================================== */
 
         /* =====================================
             Particles (rain)
         ===================================== */
-        simulateRain = function () {
-            // console.log('rain');
-            var pCount = particleCount;
-            while (pCount--) {
-                var particle = particles.vertices[pCount];
-                if (particle.y < -200) {
-                    particle.y = 200;
-                    particle.velocity.y = -0.2;
-                }
-
-                particle.velocity.y -= Math.random() * .0001;
-
-                particle.y += particle.velocity.y;
-            }
-
-            particles.verticesNeedUpdate = true;
-        };
-
 
         controls.update();
-
     }
 
     /* =====================================
@@ -274,52 +314,9 @@ function loadThree(canvasImg) {
 }
 
 
-
-// function loadThree(imagePath) {
-
-//     var fov = 70;
-//     var canvas, ctx, container, mesh, renderer, camera, scene, material;
-
-//     container = document.getElementById('pano');
-//     canvas = imagePath;
-
-//     ctx = canvas.getContext('2d');
-
-//     container = document.getElementById('pano');
-
-//     camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 1, 1100);
-//     camera.target = new THREE.Vector3(0, 0, 0);
-
-//     scene = new THREE.Scene();
-//     scene.add(camera);
-
-//     renderer = new THREE.WebGLRenderer();
-//     renderer.autoClearColor = false;
-//     renderer.setSize(window.innerWidth, window.innerHeight);
-
-//     material = new THREE.ShaderMaterial({
-
-//         uniforms: {
-//             map: { type: "t", value: THREE.ImageUtils.loadTexture('/img/placeholder.jpg') },
-//         },
-//         vertexShader: document.getElementById('vs-sphere').textContent,
-//         fragmentShader: document.getElementById('fs-sphere').textContent,
-//         side: THREE.DoubleSide
-
-//     });
-
-//     var faces = 50;
-//     mesh = new THREE.Mesh( new THREE.SphereGeometry( 500, 60, 40 ), material );
-//     scene.add( mesh );
-
-//     container.appendChild( renderer.domElement );
-
-// }
-
 /* =====================================
     Window Load
 ===================================== */
-
 
 $(window).load(function () {
     load_canvas();
