@@ -1,15 +1,17 @@
 /**
  * @author alteredq / http://alteredqualia.com/
  *
- * Full-screen textured quad shader
+ * Color correction
  */
 
-THREE.CopyShader = {
+THREE.ColorCorrectionShader = {
     
         uniforms: {
     
             "tDiffuse": { value: null },
-            "opacity":  { value: 1.0 }
+            "powRGB":   { value: new THREE.Vector3( 2, 2, 2 ) },
+            "mulRGB":   { value: new THREE.Vector3( 1, 1, 1 ) },
+            "addRGB":   { value: new THREE.Vector3( 0, 0, 0 ) }
     
         },
     
@@ -20,6 +22,7 @@ THREE.CopyShader = {
             "void main() {",
     
                 "vUv = uv;",
+    
                 "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
     
             "}"
@@ -28,16 +31,17 @@ THREE.CopyShader = {
     
         fragmentShader: [
     
-            "uniform float opacity;",
-    
             "uniform sampler2D tDiffuse;",
+            "uniform vec3 powRGB;",
+            "uniform vec3 mulRGB;",
+            "uniform vec3 addRGB;",
     
             "varying vec2 vUv;",
     
             "void main() {",
     
-                "vec4 texel = texture2D( tDiffuse, vUv );",
-                "gl_FragColor = opacity * texel;",
+                "gl_FragColor = texture2D( tDiffuse, vUv );",
+                "gl_FragColor.rgb = mulRGB * pow( ( gl_FragColor.rgb + addRGB ), powRGB );",
     
             "}"
     

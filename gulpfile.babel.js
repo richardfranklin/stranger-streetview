@@ -144,14 +144,7 @@ gulp.task('scripts', () =>
 gulp.task('vendor-scripts', () =>
     gulp.src([
         'node_modules/three/build/three.min.js',
-        'app/scripts/vendor/GSVPano.js',
-        'app/scripts/vendor/three.orbitcontrols.js',
-        'app/scripts/vendor/three.objloader.js',
-        'app/scripts/vendor/three.mtlloader.js',
-        'app/scripts/vendor/three.effectComposer.js',
-        'app/scripts/vendor/three.shaderpass.js',
-        'app/scripts/vendor/three.renderpass.js',
-        'app/scripts/vendor/three.copyshader.js'
+        'app/scripts/vendor/*.js'
     ])
     .pipe(gulp.dest('dist/scripts/vendor'))
 );

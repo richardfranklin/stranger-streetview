@@ -34,7 +34,7 @@ var load_canvas = function () {
 
 function loadThree(canvasImg) {
 
-    var container, canvas, camera, scene, renderer, geometry, texture, mesh, controls;
+    var container, composer, canvas, camera, scene, renderer, geometry, texture, mesh, controls;
     var simulateRain;
 
     init();
@@ -76,7 +76,7 @@ function loadThree(canvasImg) {
             Scene + fog
         ===================================== */
         scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x0a1721, 0.002, 0.002);
+        // scene.fog = new THREE.FogExp2(0x0a1721, 0.002, 0.002);
 
         /* =====================================
             Light
@@ -111,6 +111,42 @@ function loadThree(canvasImg) {
         camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
         camera.position.z = 0.5;
         scene.add(camera);
+
+
+        /* =====================================
+            Post Processing
+        ===================================== */
+        composer = new THREE.EffectComposer( renderer );
+        composer.addPass( new THREE.RenderPass( scene, camera ) );
+        
+        var dotScreenEffect = new THREE.ShaderPass( THREE.DotScreenShader );
+        dotScreenEffect.uniforms[ 'scale' ].value = 4;
+        // composer.addPass( dotScreenEffect );
+        
+        var luminosityEffect = new THREE.ShaderPass( THREE.LuminosityHighPassShader ); 
+        luminosityEffect.uniforms[ 'luminosityThreshold' ].value = 0.05;
+        luminosityEffect.uniforms[ 'smoothWidth' ].value = 0.4;
+        luminosityEffect.uniforms[ 'defaultColor' ].value = new THREE.Color( 0x15273f );
+        luminosityEffect.uniforms[ 'defaultOpacity' ].value = 1;
+        // composer.addPass( luminosityEffect );
+
+        var hueSaturationEffect = new THREE.ShaderPass( THREE.HueSaturationShader ); 
+        // hueSaturationEffect.uniforms[ 'hue' ].value = 0.8;
+        hueSaturationEffect.uniforms[ 'saturation' ].value = -0.8;
+        composer.addPass( hueSaturationEffect );
+
+        var colorCorrectionEffect = new THREE.ShaderPass( THREE.ColorCorrectionShader ); 
+        // composer.addPass( colorCorrectionEffect );
+
+        var vignetteEffect = new THREE.ShaderPass( THREE.VignetteShader ); 
+        vignetteEffect.uniforms[ 'offset' ].value = 1;
+        vignetteEffect.uniforms[ 'darkness' ].value = 1.1;
+        composer.addPass( vignetteEffect );
+
+        var rgbEffect = new THREE.ShaderPass( THREE.RGBShiftShader );
+        rgbEffect.uniforms[ 'amount' ].value = 0.0015;
+        rgbEffect.renderToScreen = true;
+        composer.addPass( rgbEffect );
 
         /* =====================================
             Orbit controls
@@ -165,7 +201,7 @@ function loadThree(canvasImg) {
         var innermaterial = new THREE.MeshBasicMaterial({
             map: innertexture,
             //color: 0x000000,
-            opacity: 0.75,
+            opacity: 0.95,
             transparent: true
         });
         var innergeometry = new THREE.SphereGeometry(10, 8, 8);
@@ -309,7 +345,7 @@ function loadThree(canvasImg) {
     ===================================== */
     function render() {
         requestAnimationFrame(render);
-        renderer.render(scene, camera);
+        composer.render(scene, camera);
         simulateRain();
     };
 }
