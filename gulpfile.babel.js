@@ -133,8 +133,7 @@ gulp.task('lint', () => {
 ============================================================= */
 gulp.task('scripts', () =>
     gulp.src([
-        'app/scripts/main.js',
-        'app/scripts/main-new.js'
+        'app/scripts/main.js'
     ])
     .pipe(gulp.dest('dist/scripts'))
 );
@@ -148,7 +147,11 @@ gulp.task('vendor-scripts', () =>
         'app/scripts/vendor/GSVPano.js',
         'app/scripts/vendor/three.orbitcontrols.js',
         'app/scripts/vendor/three.objloader.js',
-        'app/scripts/vendor/three.mtlloader.js'
+        'app/scripts/vendor/three.mtlloader.js',
+        'app/scripts/vendor/three.effectComposer.js',
+        'app/scripts/vendor/three.shaderpass.js',
+        'app/scripts/vendor/three.renderpass.js',
+        'app/scripts/vendor/three.copyshader.js'
     ])
     .pipe(gulp.dest('dist/scripts/vendor'))
 );

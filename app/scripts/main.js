@@ -24,7 +24,7 @@ var load_canvas = function () {
 
     // Invoke the load method with a LatLng point
     loader.load(new google.maps.LatLng(52.1721951, -0.5259921));
-}
+};
 
 
 
@@ -247,6 +247,7 @@ function loadThree(canvasImg) {
            blending: THREE.AdditiveBlending,
            depthTest: false,
            transparent: true,
+           opacity: 0.2,
            map: THREE.ImageUtils.loadTexture("/img/particle.png")
         });
 
@@ -260,9 +261,9 @@ function loadThree(canvasImg) {
             pZ = Math.random() * 1000 - 500,
             particle = new THREE.Vector3(pX, pY, pZ);
             particle.velocity = {};
-            particle.velocity.y = - (Math.random());
-            particle.velocity.x = (Math.random() * 2) - 1;
-            particle.velocity.z = (Math.random() * 2) - 1;
+            particle.velocity.y = - -((Math.random()) * 0.2);
+            particle.velocity.x = (((Math.random() * 2) - 1) * 0.2);
+            particle.velocity.z = (((Math.random() * 2) - 1) * 0.2);
             particles.vertices.push(particle);
         }
 
@@ -278,9 +279,9 @@ function loadThree(canvasImg) {
                 particle.y = 200;
                 particle.x = Math.random() * 1000 - 500;
                 particle.z = Math.random() * 1000 - 500;
-                particle.velocity.y = -(Math.random());
-                particle.velocity.x = (Math.random() * 2) - 1;
-                particle.velocity.z = (Math.random() * 2) - 1;
+                particle.velocity.y = -((Math.random()) * 0.2);
+                particle.velocity.x = (((Math.random() * 2) - 1) * 0.2);
+                particle.velocity.z = (((Math.random() * 2) - 1) * 0.2);
               }
           
               particle.y += particle.velocity.y;
