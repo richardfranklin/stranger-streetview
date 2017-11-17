@@ -90,18 +90,18 @@ function loadThree(canvasImg) {
         light.castShadow = true;
         light.shadowCameraVisible = true;
 
-        light.shadowMapWidth = 712;
-        light.shadowMapHeight = 712;
+        light.shadow.mapSize.width = 712;
+        light.shadow.mapSize.height = 712;
 
         var d = 200;
 
-        light.shadowCameraLeft = -d;
-        light.shadowCameraRight = d;
-        light.shadowCameraTop = d;
-        light.shadowCameraBottom = -d;
+        light.shadow.camera.left = -d;
+        light.shadow.camera.right = d;
+        light.shadow.camera.top = d;
+        light.shadow.camera.bottom = -d;
 
-        light.shadowCameraFar = 1000;
-        light.shadowDarkness = 0.1;
+        light.shadow.camera.far = 1000;
+        // light.shadowDarkness = 0.1;
 
         scene.add(light);
 
@@ -133,7 +133,13 @@ function loadThree(canvasImg) {
         var hueSaturationEffect = new THREE.ShaderPass( THREE.HueSaturationShader ); 
         // hueSaturationEffect.uniforms[ 'hue' ].value = 0.8;
         hueSaturationEffect.uniforms[ 'saturation' ].value = -0.8;
-        composer.addPass( hueSaturationEffect );
+        composer.addPass( hueSaturationEffect ); 
+
+        var filmEffect = new THREE.ShaderPass( THREE.FilmShader ); 
+        filmEffect.uniforms[ 'nIntensity' ].value = 0.2;
+        filmEffect.uniforms[ 'sIntensity' ].value = 0.2;
+        filmEffect.uniforms[ 'grayscale' ].value = 0;
+        composer.addPass( filmEffect );
 
         var colorCorrectionEffect = new THREE.ShaderPass( THREE.ColorCorrectionShader ); 
         // composer.addPass( colorCorrectionEffect );
@@ -255,7 +261,7 @@ function loadThree(canvasImg) {
                 object.position.x = 50;
                 object.scale.set(0.15, 0.15, 0.15);
                 object.rotation.set(0, Math.PI * 1.8, 0);
-                scene.add(object);
+                // scene.add(object);
 
                 object.traverse(function (child) {
                     if (child instanceof THREE.Mesh) {
@@ -276,15 +282,17 @@ function loadThree(canvasImg) {
             Particle 3D
         ===================================== */
 
+        var textureLoader = new THREE.TextureLoader();
+
         var particleCount = 300;
-        var pMaterial = new THREE.PointCloudMaterial({
+        var pMaterial = new THREE.PointsMaterial({
            color: 0xFFFFFF,
            size: 6,
            blending: THREE.AdditiveBlending,
            depthTest: false,
            transparent: true,
            opacity: 0.2,
-           map: THREE.ImageUtils.loadTexture("/img/particle.png")
+           map: textureLoader.load("/img/particle.png")
         });
 
         var particles = new THREE.Geometry;
@@ -303,7 +311,7 @@ function loadThree(canvasImg) {
             particles.vertices.push(particle);
         }
 
-        var particleSystem = new THREE.PointCloud(particles, pMaterial);
+        var particleSystem = new THREE.Points(particles, pMaterial);
         scene.add(particleSystem);
 
         simulateRain = function(){
