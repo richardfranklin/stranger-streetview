@@ -198,21 +198,20 @@ function loadThree(canvasImg) {
             Inner Sphere
         ===================================== */
 
-        var innertexture = new THREE.TextureLoader().load("img/inner-sphere-texture.png");
-        innertexture.wrapS = THREE.RepeatWrapping;
-        innertexture.wrapT = THREE.RepeatWrapping;
-        innertexture.repeat.set(1, 1);
-        innertexture.minFilter = THREE.LinearFilter;
+        // var innertexture = new THREE.TextureLoader().load("img/inner-sphere-texture.png");
+        // innertexture.wrapS = THREE.RepeatWrapping;
+        // innertexture.wrapT = THREE.RepeatWrapping;
+        // innertexture.repeat.set(1, 1);
+        // innertexture.minFilter = THREE.LinearFilter;
 
-        var innermaterial = new THREE.MeshBasicMaterial({
-            map: innertexture,
-            //color: 0x000000,
-            opacity: 0.95,
-            transparent: true
-        });
-        var innergeometry = new THREE.SphereGeometry(10, 8, 8);
-        var innermesh = new THREE.Mesh(innergeometry, innermaterial);
-        innermesh.material.side = THREE.DoubleSide;
+        // var innermaterial = new THREE.MeshBasicMaterial({
+        //     map: innertexture,
+        //     opacity: 0.95,
+        //     transparent: true
+        // });
+        // var innergeometry = new THREE.SphereGeometry(10, 8, 8);
+        // var innermesh = new THREE.Mesh(innergeometry, innermaterial);
+        // innermesh.material.side = THREE.DoubleSide;
         // scene.add(innermesh);
 
 
@@ -247,30 +246,30 @@ function loadThree(canvasImg) {
 
         /* ======== Object Texture ======== */
 
-        var mtlLoader = new THREE.MTLLoader();
+        // var mtlLoader = new THREE.MTLLoader();
 
-        mtlLoader.setPath('/models/demogorgon/');
+        // mtlLoader.setPath('/models/demogorgon/');
 
-        mtlLoader.load('demogorgon.mtl', function (materials) {
-            materials.preload();
-            var objLoader = new THREE.OBJLoader();
-            objLoader.setMaterials(materials);
-            objLoader.setPath('/models/demogorgon/');
-            objLoader.load('demogorgon.obj', function (object) {
-                object.position.y = -25;
-                object.position.x = 50;
-                object.scale.set(0.15, 0.15, 0.15);
-                object.rotation.set(0, Math.PI * 1.8, 0);
-                // scene.add(object);
+        // mtlLoader.load('demogorgon.mtl', function (materials) {
+        //     materials.preload();
+        //     var objLoader = new THREE.OBJLoader();
+        //     objLoader.setMaterials(materials);
+        //     objLoader.setPath('/models/demogorgon/');
+        //     objLoader.load('demogorgon.obj', function (object) {
+        //         object.position.y = -25;
+        //         object.position.x = 50;
+        //         object.scale.set(0.15, 0.15, 0.15);
+        //         object.rotation.set(0, Math.PI * 1.8, 0);
+        //         // scene.add(object);
 
-                object.traverse(function (child) {
-                    if (child instanceof THREE.Mesh) {
-                        child.castShadow = true;
-                    }
-                });
+        //         object.traverse(function (child) {
+        //             if (child instanceof THREE.Mesh) {
+        //                 child.castShadow = true;
+        //             }
+        //         });
 
-            }, onProgress, onError);
-        });
+        //     }, onProgress, onError);
+        // });
 
 
         /* =====================================
