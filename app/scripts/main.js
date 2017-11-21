@@ -4,6 +4,9 @@
     Canvas Loader
 ===================================== */
 
+var panoCanvas,
+    panoDepthCanvas;
+
 var load_canvas = function () {
     // Create a PanoLoader object
     var loader = new GSVPANO.PanoLoader();
@@ -13,9 +16,10 @@ var load_canvas = function () {
     // Implement the onPanoramaLoad handler
     loader.onPanoramaLoad = function () {
 
-        loadThree(this.canvas);
-        console.log(this.canvas);
-        /*
+    panoCanvas = this.canvas;
+    depth_loader();
+
+    /*
             Do your thing with the panorama:
             this.canvas: an HTML5 canvas with the texture
             this.copyright: the copyright of the images
@@ -26,13 +30,67 @@ var load_canvas = function () {
     loader.load(new google.maps.LatLng(52.1721951, -0.5259921));
 };
 
+/* =====================================
+    Depth Map Loader
+===================================== */
+
+
+var depth_loader = function() {
+
+    var panoLoader = new GSVPANO.PanoLoader();
+    var depthLoader = new GSVPANO.PanoDepthLoader();
+    
+    panoLoader.setZoom(3);
+    
+    depthLoader.onDepthLoad = function() {
+    
+        var x, y, canvas, context, image, w, h, c;
+        
+        canvas = document.createElement("canvas");
+        context = canvas.getContext('2d');
+        w = this.depthMap.width;
+        h = this.depthMap.height;
+        canvas.setAttribute('width', w);
+        canvas.setAttribute('height', h);
+        
+        image = context.getImageData(0, 0, w, h);
+        for(y=0; y<h; ++y) {
+            for(x=0; x<w; ++x) {
+                c = this.depthMap.depthMap[y*w + x] / 50 * 255;
+                image.data[4*(y*w + x)    ] = c;
+                image.data[4*(y*w + x) + 1] = c;
+                image.data[4*(y*w + x) + 2] = c;
+                image.data[4*(y*w + x) + 3] = 255;
+            }
+        }
+        context.putImageData(image, 0, 0);
+        var gDepthMap = this.depthMap;
+        // document.body.appendChild(canvas);
+
+        panoDepthCanvas = canvas;
+
+        loadThree(panoCanvas, panoDepthCanvas);
+
+    };
+
+    panoLoader.onPanoramaLoad = function() {
+        depthLoader.load(this.panoId);
+    };
+
+    panoLoader.load(new google.maps.LatLng(52.1721951, -0.5259921));
+};
+
+$(window).load(function() {
+    load_canvas();
+    // loadThree(panoCanvas);
+});
 
 
 /* =====================================
     Three.js
 ===================================== */
 
-function loadThree(canvasImg) {
+function loadThree(panoCanvas, panoDepthCanvas) {
 
     var container, composer, canvas, camera, scene, renderer, geometry, texture, mesh, controls;
     var simulateRain;
@@ -149,6 +207,18 @@ function loadThree(canvasImg) {
         vignetteEffect.uniforms[ 'darkness' ].value = 1.1;
         composer.addPass( vignetteEffect );
 
+        var freiChenEffect = new THREE.ShaderPass( THREE.FreiChenShader ); 
+        freiChenEffect.uniforms[ 'aspect' ].value = new THREE.Vector2( 2056, 2056 );
+        // composer.addPass( freiChenEffect );
+
+        var toneMapShaderEffect = new THREE.ShaderPass( THREE.ToneMapShader ); 
+        toneMapShaderEffect.uniforms[ 'averageLuminance' ].value = 1;
+         toneMapShaderEffect.uniforms[ 'luminanceMap' ].value = 2;
+         toneMapShaderEffect.uniforms[ 'maxLuminance' ].value = 8.0;
+         toneMapShaderEffect.uniforms[ 'minLuminance' ].value = 3;
+        toneMapShaderEffect.uniforms[ 'middleGrey' ].value = 4;
+        // composer.addPass( toneMapShaderEffect );
+
         var rgbEffect = new THREE.ShaderPass( THREE.RGBShiftShader );
         rgbEffect.uniforms[ 'amount' ].value = 0.0015;
         rgbEffect.renderToScreen = true;
@@ -166,7 +236,7 @@ function loadThree(canvasImg) {
         /* =====================================
             Canvas texture loader
         ===================================== */
-        texture = new THREE.Texture(canvasImg);
+        texture = new THREE.Texture(panoCanvas);
         texture.minFilter = THREE.LinearFilter;
         texture.needsUpdate = true;
 
@@ -183,35 +253,49 @@ function loadThree(canvasImg) {
         scene.add(mesh);
 
         /* =====================================
-            Sphere Test
+            DEPTH Canvas texture loader
         ===================================== */
-        var material2 = new THREE.MeshBasicMaterial({
-            color: 0xffffff
+        var textureDepth = new THREE.Texture(panoDepthCanvas);
+        textureDepth.minFilter = THREE.LinearFilter;
+        textureDepth.needsUpdate = true;
+        
+        /* =====================================
+            DEPTH Street view Sphere
+        ===================================== */
+        var depthMaterial = new THREE.MeshBasicMaterial({
+            map: textureDepth,
+            transparent: true
         });
-        var geometry2 = new THREE.SphereGeometry(30, 32, 32);
-        var mesh2 = new THREE.Mesh(geometry2, material2);
-        mesh2.material.side = THREE.DoubleSide;
-        mesh2.position.x = 60;
-        // scene.add(mesh2);
+        var depthGeometry = new THREE.SphereGeometry(500, 32, 32);
+        var depthMesh = new THREE.Mesh(depthGeometry, depthMaterial);
+        // mesh.rotation.set(Math.PI, 0, 0);
+        depthMesh.material.side = THREE.DoubleSide;
+        scene.add(depthMesh);
+
+        depthMaterial.opacity = 0.6;
 
         /* =====================================
             Inner Sphere
         ===================================== */
 
-        // var innertexture = new THREE.TextureLoader().load("img/inner-sphere-texture.png");
-        // innertexture.wrapS = THREE.RepeatWrapping;
-        // innertexture.wrapT = THREE.RepeatWrapping;
-        // innertexture.repeat.set(1, 1);
-        // innertexture.minFilter = THREE.LinearFilter;
+        var innertexture = new THREE.TextureLoader().load("img/vines-texture.png");
+        innertexture.wrapS = THREE.RepeatWrapping;
+        innertexture.wrapT = THREE.RepeatWrapping;
+        innertexture.repeat.set(1, 1);
+        innertexture.minFilter = THREE.LinearFilter;
 
-        // var innermaterial = new THREE.MeshBasicMaterial({
-        //     map: innertexture,
-        //     opacity: 0.95,
-        //     transparent: true
-        // });
-        // var innergeometry = new THREE.SphereGeometry(10, 8, 8);
-        // var innermesh = new THREE.Mesh(innergeometry, innermaterial);
-        // innermesh.material.side = THREE.DoubleSide;
+        var innermaterial = new THREE.MeshBasicMaterial({
+            map: innertexture,
+            opacity: 0.5,
+            transparent: true
+        });
+        //var innergeometry = new THREE.SphereGeometry(30, 8, 8);
+        var innergeometry = new THREE.PlaneGeometry( 295, 387, 32 );
+        innergeometry.rotateX(-Math.PI / 2);
+
+        var innermesh = new THREE.Mesh(innergeometry, innermaterial);
+        innermesh.material.side = THREE.DoubleSide;
+        innermesh.position.y = -50;
         // scene.add(innermesh);
 
 
@@ -229,7 +313,7 @@ function loadThree(canvasImg) {
         plane.rotateX(-Math.PI / 2);
         plane.position.y = -24;
         plane.receiveShadow = true;
-        scene.add(plane);
+        // scene.add(plane);
 
         /* =====================================
             Object loader
@@ -283,7 +367,7 @@ function loadThree(canvasImg) {
 
         var textureLoader = new THREE.TextureLoader();
 
-        var particleCount = 300;
+        var particleCount = 1000;
         var pMaterial = new THREE.PointsMaterial({
            color: 0xFFFFFF,
            size: 6,
@@ -356,12 +440,3 @@ function loadThree(canvasImg) {
         simulateRain();
     };
 }
-
-
-/* =====================================
-    Window Load
-===================================== */
-
-$(window).load(function () {
-    load_canvas();
-});
